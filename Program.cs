@@ -76,13 +76,25 @@ app.MapGet("/identify", (HttpContext context, ILogger<Program> logger) =>
 });
 
 //додавання товару до кошика
-app.MapPost("/cart/add/{productId:int}", (int productId, HttpContext context, List<Product> catalog, ILogger<Program> logger) =>
+app.MapPost("/cart/add/{productId:int}", (
+    int productId,
+    int quantity,
+    HttpContext context,
+    List<Product> catalog,
+    ILogger<Program> logger) =>
 {
     if (!context.Request.Cookies.TryGetValue("UserId", out var rawId) ||
         !Guid.TryParse(rawId, out var userId))
     {
         logger.LogWarning("спроба додати товар без валідної кукі UserId");
         throw new InvalidCookieException();
+    }
+
+    //перевірка кількості
+    if (quantity <= 0)
+    {
+        logger.LogWarning("некоректна кількість {Quantity} для товару {ProductId}, UserId: {UserId}", quantity, productId, userId);
+        throw new CartException("кількість товару повинна бути більше 0");
     }
 
     //чи існує товар
@@ -99,7 +111,7 @@ app.MapPost("/cart/add/{productId:int}", (int productId, HttpContext context, Li
     var existing = cart.FirstOrDefault(c => c.ProductId == productId);
     if (existing is not null)
     {
-        existing.Quantity++;
+        existing.Quantity += quantity;
     }
     else
     {
@@ -108,14 +120,14 @@ app.MapPost("/cart/add/{productId:int}", (int productId, HttpContext context, Li
             ProductId = product.Id,
             Name = product.Name,
             Price = product.Price,
-            Quantity = 1
+            Quantity = quantity
         });
     }
 
     context.Session.SetObject("Cart", cart);
 
-    logger.LogInformation("товар {ProductName} доданий до кошика, UserId: {UserId}", product.Name, userId);
-    return Results.Ok(new { message = $"Товар {product.Name} додано до кошика" });
+    logger.LogInformation("товар {ProductName} x{Quantity} доданий до кошика, UserId: {UserId}", product.Name, quantity, userId);
+    return Results.Ok(new { message = $"Товар {product.Name} x{quantity} додано до кошика" });
 });
 
 //перегляд кошика
