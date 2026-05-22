@@ -1,0 +1,38 @@
+@ShoppingCart_HostAddress = http://localhost:5105
+
+###2 перевірка ідентифікації нового користувача
+GET {{ShoppingCart_HostAddress}}/identify
+Accept: application/json
+
+### 2 повторна ідентифікація коли кука вже є
+GET {{ShoppingCart_HostAddress}}/identify
+Accept: application/json
+
+### 3 додати ноутбук до кошика
+POST {{ShoppingCart_HostAddress}}/cart/add/1
+Accept: application/json
+
+### 3 додати смартфон до кошика
+POST {{ShoppingCart_HostAddress}}/cart/add/2
+Accept: application/json
+
+### 3 переглянути кошик
+GET {{ShoppingCart_HostAddress}}/cart
+Accept: application/json
+
+### 3 очистити кошик
+GET {{ShoppingCart_HostAddress}}/cart/clear
+Accept: application/json
+
+### 3 переглянути кошик після очищення
+GET {{ShoppingCart_HostAddress}}/cart
+Accept: application/json
+
+### 4 товар якого не існує має повернути 404
+POST {{ShoppingCart_HostAddress}}/cart/add/999
+Accept: application/json
+
+### 4 некоректна кука має повернути 400
+GET {{ShoppingCart_HostAddress}}/cart
+Accept: application/json
+Cookie: UserId=некоректний-формат
